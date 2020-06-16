@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import axiosWithAuth from "../utils/axiosWithAuth";
 
 const initialColor = {
   color: "",
@@ -7,9 +8,10 @@ const initialColor = {
 };
 
 const ColorList = ({ colors, updateColors }) => {
-  console.log(colors);
+  // console.log(colors);
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
+  const [colorToAdd, setColorToAdd] = useState(initialColor)
 
   const editColor = color => {
     setEditing(true);
@@ -21,11 +23,32 @@ const ColorList = ({ colors, updateColors }) => {
     // Make a put request to save your updated color
     // think about where will you get the id from...
     // where is is saved right now?
+    axiosWithAuth()
+      .put(`/colors/${colorToEdit.id}`, colorToEdit)
+      .then(res => {
+        setEditing(false)
+        updateColors()
+      })
+      .catch(err => console.log(err.message))
+    
   };
 
   const deleteColor = color => {
-    // make a delete request to delete this color
+    axiosWithAuth()
+      .delete(`/colors/${color.id}`)
+      .then(res => updateColors())
+    
   };
+
+  const addColor = e => {
+    e.preventDefault();
+    axiosWithAuth()
+      .post('/colors', colorToAdd)
+      .then(res => {
+        updateColors()
+        setColorToAdd(initialColor)
+      })
+  }
 
   return (
     <div className="colors-wrap">
@@ -81,7 +104,18 @@ const ColorList = ({ colors, updateColors }) => {
         </form>
       )}
       <div className="spacer" />
-      {/* stretch - build another form here to add a color */}
+      <form onSubmit={addColor}>
+        <legend>Add Color</legend>
+        <label>
+          color name: 
+          <input value={colorToAdd.color} onChange={e => setColorToAdd({...colorToAdd, color: e.target.value})} />
+        </label>
+        <label>
+        hex code:
+          <input value={colorToAdd.code.hex} onChange={e => setColorToAdd({...colorToAdd, code: {hex: e.target.value}})} />
+        </label>
+        <button type="submit">Add!!</button>
+      </form>
     </div>
   );
 };
